@@ -1,0 +1,173 @@
+<!DOCTYPE html
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body{
+	-webkit-font-smoothing: antialiased;
+    font-family: Roboto,sans-serif;
+	width:960px;
+	margin:50px auto;
+}
+.state-td{
+	/*background: rgb(230, 230, 230);*/
+	border: 2px solid white;
+	text-align: center;
+}
+.state-td:hover{
+  opacity:0.5;
+  cursor:pointer;
+}
+#tooltip {
+  position: absolute;
+  text-align: center;
+  padding: 20px;
+  margin: 10px;
+  font: 12px sans-serif;
+  background: lightsteelblue;
+  border: 1px;
+  border-radius: 2px;
+  pointer-events: none;
+}
+#tooltip h4{
+  margin:0;
+  font-size:14px;
+}
+#tooltip{
+  background:rgba(0,0,0,0.9);
+  border:1px solid grey;
+  border-radius:5px;
+  font-size:12px;
+  width:auto;
+  padding:4px;
+  color:white;
+  opacity:0;
+}
+#tooltip table{
+  table-layout:fixed;
+}
+#tooltip tr td{
+  padding:0;
+  margin:0;
+  color:white;
+}
+#tooltip tr td:nth-child(1){
+  width:50px;
+}
+#tooltip tr td:nth-child(2){
+  text-align:center;
+}
+a:hover {
+    cursor: pointer;
+}
+
+/*.CA{background:#18FFFF;}
+.SE{background:#FFEA00;}
+.NE{background:#CE93D8;}
+.MW{background:#FF9E80;}
+.SW{background:#4CAF50;}
+.WE{background:#81D4FA;}*/
+</style>
+</head>
+<body onload="main()">
+  <div id="tooltip"></div><!-- div to hold tooltip. -->
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<table id="st-grid" style="width:600px; margin:0 auto;height:400px;table-layout:fixed;border-collapse:collapse;"><tbody></tbody></table>
+
+<script>
+var stateLoc =[
+ ["AK",    ,    ,    ,    ,    ,    ,    ,    ,    ,    ,"ME"]
+,[    ,    ,    ,    ,    ,    ,    ,    ,    ,    ,"VT","NH"]
+,[    ,"WA","ID","MT","ND","MN",    ,"MI",    ,"NY","MA","RI"]
+,[    ,"OR","UT","WY","SD","IA","WI","IN","OH","PA","NJ","CT"]
+,[    ,"CA","NV","CO","NE","MO","IL","KY","WV","VA","MD","DE"]
+,[    ,    ,"AZ","NM","KS","AR","TN","NC","SC","DC",    ,    ]
+,["NI",    ,    ,    ,"OK","LA","MS","AL","GA",    ,    ,    ]
+,["GU","HI",    ,    ,"TX",    ,    ,    ,    ,"FL",    ,    ]
+,[    ,"SM",    ,    ,    ,    ,    ,    ,    ,    ,"PR","VI"]
+];
+var data2 = [];
+var data3 = [];
+function main() {
+  doData();
+}
+
+function doData() {
+  d3.csv("seats.csv", function(data) {
+    data.forEach(function(d) {
+      d.popSeat = +d.popseat;
+      d.reps = +d.reps;
+      d.pop = +d.pop;
+    });
+    data.forEach(function(l) {
+      l.color = d3.interpolate("#ffffcc", "#800026")(10/100);
+      data2[l.short] = l;
+    })
+  });
+  loadD3();
+}
+function loadD3() {
+  var div = d3.select("body").append("div")
+      .attr("id", "tooltip")
+      .style("opacity", 0);
+
+  var rows = d3.select("#st-grid").select("tbody")
+  	.selectAll("tr").data(stateLoc).enter().append("tr");
+
+  var cells = rows.selectAll("td").data(function(d){ return d;}).enter().append("td")
+  	.attr("class",function(d){ return d==undefined? "blank-td" : "state-td"})
+    .text(function(d){ return d})
+    .on("mouseover", function(d) {
+      if (d != undefined) {
+      div.transition()
+        .duration(200)
+        .style("opacity", .9);
+      div.html("<h4>"+ data2[d].State + "</h4>"+"<table>"+
+          "<tr><td>Population</td><td>"+(data2[d].pop)+"</td></tr>"+
+          "<tr><td>Reps.</td><td>"+(data2[d].reps)+"</td></tr>"+
+          "<tr><td>Pop/rep</td><td>"+(data2[d].popSeat)+"</td></tr>"+
+          "</table>")
+          .style("left", (d3.event.pageX - 34) + "px")
+          .style("top", (d3.event.pageY - 12) + "px");
+
+      }})
+      // .on("mousemove", function(d) {
+      // div
+      //   .style("left", (d3.event.pageX - 34) + "px")
+      //   .style("top", (d3.event.pageY - 12) + "px");
+      // })
+      .on("mouseout", function(d) {
+      div.transition()
+          .duration(500)
+          .style("opacity", 0);
+  });
+}
+
+setTimeout(function() {
+
+  var table = document.getElementById("st-grid").getElementsByTagName("tbody");
+  var rows = table[0].getElementsByTagName("tr");
+  for (var i = 0; i < rows.length; i++) {
+    var squares = rows[i].getElementsByTagName("td");
+    for (var j = 0; j < squares.length; j++) {
+      var elem = squares[j];
+      var state = stateLoc[i][j];
+      // console.log(JSON.parse(data2));
+      // data2.forEach(function(m) {
+      //   console.log(m);
+      // })
+
+      if (state != undefined) {
+        console.log(data2[state]);
+        elem.setAttribute("style","background-color: red;");
+
+        elem.setAttribute("style", "background-color: " + d3.interpolate("#e4ffd8", "#9885a3")(data2[state].popSeat/1000000) + ";");
+      }
+      }
+    }
+
+
+}, 500);
+</script>
+</body>
+</html>
